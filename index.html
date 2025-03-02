@@ -49,16 +49,15 @@
       color: gold;
       font-family: 'Courier New', monospace;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
     }
-    .countdown span {
-      font-size: 36px;
+    .timer {
+      font-size: 40px;
       font-weight: bold;
       background: black;
-      padding: 10px;
+      padding: 15px;
       border-radius: 5px;
-      margin: 0 5px;
       display: inline-block;
     }
     table {
@@ -100,8 +99,8 @@
     </div>
     
     <div class="countdown">
-      <p id="countdown-text"></p>
-      <span id="hours">00</span>:<span id="minutes">00</span>:<span id="seconds">00</span>
+      <p id="countdown-text">Time left for Suhoor/Iftar:</p>
+      <div class="timer" id="timer">00:00:00</div>
     </div>
 
     <table>
@@ -139,24 +138,23 @@
       fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
-          const todayDate = currentDate.toISOString().split('T')[0];
+          const today = currentDate.getDate();
           const timingsArray = data.data;
           const tbody = document.getElementById('namaz-timings');
           let iftarTime, suhoorTime;
           
-          timingsArray.forEach(item => {
-            const dateStr = item.date.gregorian.date;
+          timingsArray.forEach((item, index) => {
             const timings = item.timings;
             const formatTime = timeStr => timeStr.split(' ')[0];
             
-            if (dateStr === todayDate) {
-              iftarTime = new Date(`${todayDate}T${formatTime(timings.Maghrib)}:00`);
-              suhoorTime = new Date(`${todayDate}T${formatTime(timings.Fajr)}:00`);
+            if (index + 1 === today) {
+              iftarTime = new Date(`${item.date.gregorian.date}T${formatTime(timings.Maghrib)}:00`);
+              suhoorTime = new Date(`${item.date.gregorian.date}T${formatTime(timings.Fajr)}:00`);
             }
 
             const row = document.createElement('tr');
             row.innerHTML = `
-              <td>${dateStr}</td>
+              <td>${item.date.gregorian.date}</td>
               <td>${formatTime(timings.Fajr)}</td>
               <td>${formatTime(timings.Sunrise)}</td>
               <td>${formatTime(timings.Dhuhr)}</td>
@@ -170,16 +168,13 @@
           function updateCountdown() {
             const now = new Date();
             const targetTime = now < iftarTime ? iftarTime : suhoorTime;
-            const countdownText = now < iftarTime ? 'Time left for Iftar:' : 'Time left for Suhoor:';
             const diff = Math.max(0, targetTime - now);
-            document.getElementById('countdown-text').innerText = countdownText;
-            document.getElementById('hours').innerText = String(Math.floor(diff / 3600000)).padStart(2, '0');
-            document.getElementById('minutes').innerText = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-            document.getElementById('seconds').innerText = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+            document.getElementById('timer').innerText = new Date(diff).toISOString().substr(11, 8);
             setTimeout(updateCountdown, 1000);
           }
           updateCountdown();
-        });
+        })
+        .catch(error => console.error('Error fetching prayer timings:', error));
     });
   </script>
 </body>
