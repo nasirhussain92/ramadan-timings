@@ -8,7 +8,7 @@
   <style>
     body {
       font-family: 'Raleway', sans-serif;
-      background: url('assets/A_stunning_Ramadan-themed_background_featuring_a_g.png.webp') no-repeat center center/cover;
+      background: url('assets/ramadan-background.jpg') no-repeat center center/cover;
       color: white;
       text-align: center;
       padding: 20px;
@@ -130,27 +130,28 @@
     document.addEventListener('DOMContentLoaded', function () {
       const latitude = 24.9425;
       const longitude = 67.0822;
-      const method = 1;
-      const apiUrl = `https://api.aladhan.com/v1/calendar?latitude=${latitude}&longitude=${longitude}&method=${method}&month=3&year=2025`;
+      const method = 2;
+      const currentDate = new Date();
+      const month = currentDate.getMonth() + 1;
+      const year = currentDate.getFullYear();
+      const apiUrl = `https://api.aladhan.com/v1/calendar?latitude=${latitude}&longitude=${longitude}&method=${method}&month=${month}&year=${year}`;
       
       fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
-          const timesArray = data.data.slice(0, 10);
+          const todayDate = currentDate.toISOString().split('T')[0];
+          const timingsArray = data.data;
           const tbody = document.getElementById('namaz-timings');
-          const today = new Date().toISOString().split('T')[0];
+          let iftarTime, suhoorTime;
           
-          let iftarTime = null;
-          let suhoorTime = null;
-          
-          timesArray.forEach(item => {
+          timingsArray.forEach(item => {
             const dateStr = item.date.gregorian.date;
             const timings = item.timings;
             const formatTime = timeStr => timeStr.split(' ')[0];
             
-            if (dateStr === today) {
-              iftarTime = new Date(`${today}T${formatTime(timings.Maghrib)}:00Z`);
-              suhoorTime = new Date(`${today}T${formatTime(timings.Fajr)}:00Z`);
+            if (dateStr === todayDate) {
+              iftarTime = new Date(`${todayDate}T${formatTime(timings.Maghrib)}:00`);
+              suhoorTime = new Date(`${todayDate}T${formatTime(timings.Fajr)}:00`);
             }
 
             const row = document.createElement('tr');
@@ -168,9 +169,8 @@
           
           function updateCountdown() {
             const now = new Date();
-            let targetTime = now < iftarTime ? iftarTime : suhoorTime;
-            let countdownText = now < iftarTime ? 'Time left for Iftar:' : 'Time left for Suhoor:';
-            
+            const targetTime = now < iftarTime ? iftarTime : suhoorTime;
+            const countdownText = now < iftarTime ? 'Time left for Iftar:' : 'Time left for Suhoor:';
             const diff = Math.max(0, targetTime - now);
             document.getElementById('countdown-text').innerText = countdownText;
             document.getElementById('hours').innerText = String(Math.floor(diff / 3600000)).padStart(2, '0');
