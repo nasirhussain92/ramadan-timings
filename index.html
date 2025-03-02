@@ -127,6 +127,20 @@
   </div>
 
   <script>
+    // Converts date from "DD-MM-YYYY" to "YYYY-MM-DD"
+    function convertDateFormat(dateStr) {
+      const parts = dateStr.split('-'); // parts[0]=DD, parts[1]=MM, parts[2]=YYYY
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    
+    // Formats the current date to "DD-MM-YYYY"
+    function formatCurrentDate(date) {
+      let day = String(date.getDate()).padStart(2, '0');
+      let month = String(date.getMonth() + 1).padStart(2, '0');
+      let year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+    
     document.addEventListener('DOMContentLoaded', function () {
       const latitude = 24.9425;
       const longitude = 67.0822;
@@ -142,87 +156,66 @@
           const timingsArray = data.data;
           const tbody = document.getElementById('namaz-timings');
           let todayFajr, todayMaghrib;
-          const currentDay = currentDate.getDate();
+          const todayFormatted = formatCurrentDate(currentDate); // "DD-MM-YYYY"
           
-          // Helper function to extract time in HH:MM format
-          const formatTime = timeStr => timeStr.split(' ')[0];
-          
-          // Helper function to format a Date object to HH:MM (24-hour) display
-          function formatDisplayTime(date) {
-            return date.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit', hour12: false});
-          }
-          
-          // Build table rows for the next 10 days and capture today's timings
           timingsArray.forEach(item => {
-            const day = parseInt(item.date.gregorian.day);
-            const dateStr = item.date.gregorian.date;
             const timings = item.timings;
-            const fajrTimeStr = formatTime(timings.Fajr);
-            const maghribTimeStr = formatTime(timings.Maghrib);
+            const dateStr = item.date.gregorian.date; // "DD-MM-YYYY"
+            const formattedDate = convertDateFormat(dateStr); // "YYYY-MM-DD"
+            const fajrTimeStr = timings.Fajr.split(' ')[0];
+            const maghribTimeStr = timings.Maghrib.split(' ')[0];
             
             // Calculate Suhoor as 10 minutes before Fajr
-            let suhoorDate = new Date(`${dateStr}T${fajrTimeStr}:00`);
+            let suhoorDate = new Date(`${formattedDate}T${fajrTimeStr}:00`);
             suhoorDate.setMinutes(suhoorDate.getMinutes() - 10);
-            const suhoorDisplay = formatDisplayTime(suhoorDate);
+            const suhoorDisplay = suhoorDate.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit', hour12: false});
             
-            // Display only the next 10 days
-            if (day >= currentDay && day < currentDay + 10) {
+            // Build table rows for the next 10 days (filter by day number)
+            const dayNum = parseInt(item.date.gregorian.day, 10);
+            const currentDayNum = currentDate.getDate();
+            if (dayNum >= currentDayNum && dayNum < currentDayNum + 10) {
               const row = document.createElement('tr');
               row.innerHTML = `
                 <td>${dateStr}</td>
                 <td>${suhoorDisplay}</td>
                 <td>${fajrTimeStr}</td>
-                <td>${formatTime(timings.Sunrise)}</td>
-                <td>${formatTime(timings.Dhuhr)}</td>
-                <td>${formatTime(timings.Asr)}</td>
+                <td>${timings.Sunrise.split(' ')[0]}</td>
+                <td>${timings.Dhuhr.split(' ')[0]}</td>
+                <td>${timings.Asr.split(' ')[0]}</td>
                 <td>${maghribTimeStr}</td>
-                <td>${formatTime(timings.Isha)}</td>
+                <td>${timings.Isha.split(' ')[0]}</td>
               `;
               tbody.appendChild(row);
             }
             
-            // If this is today's date, record today's Fajr and Maghrib timings
-            if (day === currentDay) {
-              todayFajr = new Date(`${dateStr}T${fajrTimeStr}:00`);
-              todayMaghrib = new Date(`${dateStr}T${maghribTimeStr}:00`);
+            // Capture today's Fajr and Maghrib times for the countdown
+            if (dateStr === todayFormatted) {
+              todayFajr = new Date(`${formattedDate}T${fajrTimeStr}:00`);
+              todayMaghrib = new Date(`${formattedDate}T${maghribTimeStr}:00`);
             }
           });
           
-          // Countdown logic: if before Fajr, countdown to Fajr; if between Fajr and Maghrib, countdown to Maghrib; if after Maghrib, countdown to next day's Fajr.
           function updateCountdown() {
             const now = new Date();
             let targetTime, countdownText;
-            
-            if (now < todayFajr) {
-              targetTime = todayFajr;
-              countdownText = "Time left for Suhoor (Fajr):";
-            } else if (now >= todayFajr && now < todayMaghrib) {
-              targetTime = todayMaghrib;
-              countdownText = "Time left for Iftar (Maghrib):";
-            } else {
-              // After Maghrib, target is next day's Fajr.
-              targetTime = new Date(todayFajr.getTime() + 24 * 60 * 60 * 1000);
-              countdownText = "Time left for Suhoor (Fajr) next day:";
-            }
-            
-            const diff = targetTime - now;
-            const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
-            const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-            const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
-            
-            document.getElementById('countdown-text').innerText = countdownText;
-            document.getElementById('timer').innerText = `${hours}:${minutes}:${seconds}`;
-            setTimeout(updateCountdown, 1000);
-          }
-          
-          if (todayFajr && todayMaghrib) {
-            updateCountdown();
-          } else {
-            document.getElementById('timer').innerText = 'N/A';
-          }
-        })
-        .catch(error => console.error('Error fetching prayer timings:', error));
-    });
-  </script>
-</body>
-</html>
+            if (todayFajr && todayMaghrib) {
+              if (now < todayFajr) {
+                targetTime = todayFajr;
+                countdownText = 'Time left for Suhoor (Fajr):';
+              } else if (now >= todayFajr && now < todayMaghrib) {
+                targetTime = todayMaghrib;
+                countdownText = 'Time left for Iftar (Maghrib):';
+              } else {
+                // After Maghrib, countdown to next day's Fajr (approximate by adding 24 hours to today's Fajr)
+                targetTime = new Date(todayFajr.getTime() + 24 * 60 * 60 * 1000);
+                countdownText = 'Time left for Suhoor (Fajr) next day:';
+              }
+              
+              const diff = targetTime - now;
+              const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+              const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+              const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+              document.getElementById('countdown-text').innerText = countdownText;
+              document.getElementById('timer').innerText = `${hours}:${minutes}:${seconds}`;
+            } else {\n              document.getElementById('timer').innerText = 'N/A';\n            }\n            setTimeout(updateCountdown, 1000);\n          }\n          updateCountdown();\n        })\n        .catch(error => console.error('Error fetching prayer timings:', error));\n    });\n  </script>\n</body>\n</html>\n"}]} 
+
