@@ -34,11 +34,17 @@
       padding: 15px;
       background: rgba(255, 223, 186, 0.2);
       border-radius: 10px;
+      flex-wrap: wrap;
     }
     .logo img {
       width: 100px;
       border-radius: 50%;
       border: 3px solid gold;
+    }
+    .title {
+      flex: 1;
+      text-align: center;
+      margin: 10px 0;
     }
     .title h1 {
       font-size: 30px;
@@ -91,6 +97,35 @@
       font-size: 14px;
       color: #ccc;
     }
+    /* Mobile Responsive Styles */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        padding: 10px;
+      }
+      .header {
+        flex-direction: column;
+      }
+      .logo img {
+        width: 80px;
+      }
+      .title h1 {
+        font-size: 24px;
+      }
+      .countdown {
+        font-size: 20px;
+      }
+      .timer {
+        font-size: 32px;
+        padding: 10px;
+      }
+      th, td {
+        padding: 8px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -134,13 +169,13 @@
   </div>
 
   <script>
-    // Helper function: Convert "DD-MM-YYYY" to "YYYY-MM-DD"
+    // Helper: Convert "DD-MM-YYYY" to "YYYY-MM-DD"
     function convertDateFormat(dateStr) {
       const parts = dateStr.split('-'); // [DD, MM, YYYY]
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
 
-    // Helper function: Format a Date object as "DD-MM-YYYY"
+    // Helper: Format a Date object as "DD-MM-YYYY"
     function formatDateDDMMYYYY(dateObj) {
       const day = String(dateObj.getDate()).padStart(2, '0');
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -170,7 +205,7 @@
             const dateStr = item.date.gregorian.date; // "DD-MM-YYYY"
             const formattedDate = convertDateFormat(dateStr); // "YYYY-MM-DD"
             const timings = item.timings;
-            // Extract time components (remove any timezone information)
+            // Extract times (remove timezone info)
             const fajrTimeStr = timings.Fajr.split(' ')[0];
             const maghribTimeStr = timings.Maghrib.split(' ')[0];
             const sunriseTimeStr = timings.Sunrise.split(' ')[0];
@@ -183,7 +218,7 @@
             suhoorDate.setMinutes(suhoorDate.getMinutes() - 10);
             const suhoorDisplay = suhoorDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-            // Build table rows for the next 10 days (filter by day number)
+            // Build table rows for the next 10 days
             const dayNum = parseInt(item.date.gregorian.day, 10);
             const currentDay = currentDate.getDate();
             if (dayNum >= currentDay && dayNum < currentDay + 10) {
@@ -201,17 +236,17 @@
               tbody.appendChild(row);
             }
 
-            // Capture today's Fajr and Maghrib times for countdown (match on "DD-MM-YYYY")
+            // Capture today's Fajr and Maghrib for countdown
             if (dateStr === todayStr) {
               todayFajr = new Date(`${formattedDate}T${fajrTimeStr}:00`);
               todayMaghrib = new Date(`${formattedDate}T${maghribTimeStr}:00`);
             }
           });
 
-          // Countdown logic:
-          // - Before Fajr: countdown to Fajr (end of Suhoor)
-          // - Between Fajr and Maghrib: countdown to Maghrib (Iftar)
-          // - After Maghrib: countdown to next day's Fajr
+          // Countdown Logic:
+          // - Before Fajr: Countdown to Fajr (end of Suhoor)
+          // - Between Fajr and Maghrib: Countdown to Maghrib (Iftar)
+          // - After Maghrib: Countdown to next day's Fajr
           function updateCountdown() {
             const now = new Date();
             let targetTime, countdownText;
@@ -223,7 +258,7 @@
                 targetTime = todayMaghrib;
                 countdownText = "Time left for Iftar (Maghrib):";
               } else {
-                // After Maghrib, target next day's Fajr
+                // After Maghrib, target next day's Fajr (approximation: add 24 hours to today's Fajr)
                 targetTime = new Date(todayFajr.getTime() + 24 * 60 * 60 * 1000);
                 countdownText = "Time left for Suhoor (Fajr) next day:";
               }
