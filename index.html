@@ -6,6 +6,12 @@
   <title>Ramadan Namaz Timings - KIET North Nazimabad</title>
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    /* Basic Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: 'Raleway', sans-serif;
       background: url('images/ramadan-background.jpg') no-repeat center center/cover;
@@ -118,6 +124,7 @@
         </tr>
       </thead>
       <tbody id="namaz-timings">
+        <!-- Rows will be inserted here by JavaScript -->
       </tbody>
     </table>
 
@@ -127,21 +134,21 @@
   </div>
 
   <script>
-    // Converts date from "DD-MM-YYYY" to "YYYY-MM-DD"
+    // Helper function: Convert "DD-MM-YYYY" to "YYYY-MM-DD"
     function convertDateFormat(dateStr) {
-      const parts = dateStr.split('-'); // parts[0]=DD, parts[1]=MM, parts[2]=YYYY
+      const parts = dateStr.split('-'); // [DD, MM, YYYY]
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
-    
-    // Formats the current date to "DD-MM-YYYY"
-    function formatCurrentDate(date) {
-      let day = String(date.getDate()).padStart(2, '0');
-      let month = String(date.getMonth() + 1).padStart(2, '0');
-      let year = date.getFullYear();
+
+    // Helper function: Format a Date object as "DD-MM-YYYY"
+    function formatDateDDMMYYYY(dateObj) {
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const year = dateObj.getFullYear();
       return `${day}-${month}-${year}`;
     }
-    
-    document.addEventListener('DOMContentLoaded', function () {
+
+    document.addEventListener('DOMContentLoaded', function() {
       const latitude = 24.9425;
       const longitude = 67.0822;
       const method = 2;
@@ -149,73 +156,92 @@
       const month = currentDate.getMonth() + 1;
       const year = currentDate.getFullYear();
       const apiUrl = `https://api.aladhan.com/v1/calendar?latitude=${latitude}&longitude=${longitude}&method=${method}&month=${month}&year=${year}`;
-      
+
       fetch(apiUrl)
         .then(response => response.json())
         .then(data => {
           const timingsArray = data.data;
           const tbody = document.getElementById('namaz-timings');
-          let todayFajr, todayMaghrib;
-          const todayFormatted = formatCurrentDate(currentDate); // "DD-MM-YYYY"
-          
+          let todayFajr = null;
+          let todayMaghrib = null;
+          const todayStr = formatDateDDMMYYYY(currentDate); // "DD-MM-YYYY"
+
           timingsArray.forEach(item => {
-            const timings = item.timings;
             const dateStr = item.date.gregorian.date; // "DD-MM-YYYY"
             const formattedDate = convertDateFormat(dateStr); // "YYYY-MM-DD"
+            const timings = item.timings;
+            // Extract time components (remove any timezone information)
             const fajrTimeStr = timings.Fajr.split(' ')[0];
             const maghribTimeStr = timings.Maghrib.split(' ')[0];
-            
+            const sunriseTimeStr = timings.Sunrise.split(' ')[0];
+            const dhuhrTimeStr = timings.Dhuhr.split(' ')[0];
+            const asrTimeStr = timings.Asr.split(' ')[0];
+            const ishaTimeStr = timings.Isha.split(' ')[0];
+
             // Calculate Suhoor as 10 minutes before Fajr
             let suhoorDate = new Date(`${formattedDate}T${fajrTimeStr}:00`);
             suhoorDate.setMinutes(suhoorDate.getMinutes() - 10);
-            const suhoorDisplay = suhoorDate.toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit', hour12: false});
-            
+            const suhoorDisplay = suhoorDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+
             // Build table rows for the next 10 days (filter by day number)
             const dayNum = parseInt(item.date.gregorian.day, 10);
-            const currentDayNum = currentDate.getDate();
-            if (dayNum >= currentDayNum && dayNum < currentDayNum + 10) {
+            const currentDay = currentDate.getDate();
+            if (dayNum >= currentDay && dayNum < currentDay + 10) {
               const row = document.createElement('tr');
               row.innerHTML = `
                 <td>${dateStr}</td>
                 <td>${suhoorDisplay}</td>
                 <td>${fajrTimeStr}</td>
-                <td>${timings.Sunrise.split(' ')[0]}</td>
-                <td>${timings.Dhuhr.split(' ')[0]}</td>
-                <td>${timings.Asr.split(' ')[0]}</td>
+                <td>${sunriseTimeStr}</td>
+                <td>${dhuhrTimeStr}</td>
+                <td>${asrTimeStr}</td>
                 <td>${maghribTimeStr}</td>
-                <td>${timings.Isha.split(' ')[0]}</td>
+                <td>${ishaTimeStr}</td>
               `;
               tbody.appendChild(row);
             }
-            
-            // Capture today's Fajr and Maghrib times for the countdown
-            if (dateStr === todayFormatted) {
+
+            // Capture today's Fajr and Maghrib times for countdown (match on "DD-MM-YYYY")
+            if (dateStr === todayStr) {
               todayFajr = new Date(`${formattedDate}T${fajrTimeStr}:00`);
               todayMaghrib = new Date(`${formattedDate}T${maghribTimeStr}:00`);
             }
           });
-          
+
+          // Countdown logic:
+          // - Before Fajr: countdown to Fajr (end of Suhoor)
+          // - Between Fajr and Maghrib: countdown to Maghrib (Iftar)
+          // - After Maghrib: countdown to next day's Fajr
           function updateCountdown() {
             const now = new Date();
             let targetTime, countdownText;
             if (todayFajr && todayMaghrib) {
               if (now < todayFajr) {
                 targetTime = todayFajr;
-                countdownText = 'Time left for Suhoor (Fajr):';
+                countdownText = "Time left for Suhoor (Fajr):";
               } else if (now >= todayFajr && now < todayMaghrib) {
                 targetTime = todayMaghrib;
-                countdownText = 'Time left for Iftar (Maghrib):';
+                countdownText = "Time left for Iftar (Maghrib):";
               } else {
-                // After Maghrib, countdown to next day's Fajr (approximate by adding 24 hours to today's Fajr)
+                // After Maghrib, target next day's Fajr
                 targetTime = new Date(todayFajr.getTime() + 24 * 60 * 60 * 1000);
-                countdownText = 'Time left for Suhoor (Fajr) next day:';
+                countdownText = "Time left for Suhoor (Fajr) next day:";
               }
-              
               const diff = targetTime - now;
               const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
               const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
               const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
               document.getElementById('countdown-text').innerText = countdownText;
               document.getElementById('timer').innerText = `${hours}:${minutes}:${seconds}`;
-            } else {\n              document.getElementById('timer').innerText = 'N/A';\n            }\n            setTimeout(updateCountdown, 1000);\n          }\n          updateCountdown();\n        })\n        .catch(error => console.error('Error fetching prayer timings:', error));\n    });\n  </script>\n</body>\n</html>\n"}]} 
-
+            } else {
+              document.getElementById('timer').innerText = 'N/A';
+            }
+            setTimeout(updateCountdown, 1000);
+          }
+          updateCountdown();
+        })
+        .catch(error => console.error('Error fetching prayer timings:', error));
+    });
+  </script>
+</body>
+</html>
