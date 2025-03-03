@@ -55,17 +55,24 @@
     .title p {
       font-size: 16px;
     }
-    .countdown {
+    /* Countdown & Dua Links Wrapper */
+    .countdown-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-top: 20px;
-      font-size: 24px;
       background: rgba(255, 223, 186, 0.2);
       padding: 15px;
       border-radius: 10px;
       color: gold;
       font-family: 'Courier New', monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    }
+    .countdown-left {
+      text-align: left;
+    }
+    .countdown-left p {
+      font-size: 24px;
+      margin-bottom: 5px;
     }
     .timer {
       font-size: 40px;
@@ -74,12 +81,20 @@
       padding: 15px;
       border-radius: 5px;
       display: inline-block;
-      margin-top: 5px;
     }
-    /* Dua message container (near the countdown) */
-    .dua-message {
-      margin-top: 10px;
+    .dua-links {
+      text-align: right;
+      min-width: 200px;
+    }
+    .dua-links a {
+      color: gold;
+      text-decoration: none;
+      font-size: 18px;
+    }
+    .dua-links div {
       font-size: 20px;
+      font-weight: bold;
+      direction: rtl;
     }
     table {
       width: 100%;
@@ -149,8 +164,12 @@
       .title h1 {
         font-size: 24px;
       }
-      .countdown {
-        font-size: 20px;
+      .countdown-wrapper {
+        flex-direction: column;
+      }
+      .dua-links {
+        margin-top: 10px;
+        text-align: center;
       }
       .timer {
         font-size: 32px;
@@ -160,7 +179,10 @@
         padding: 8px;
         font-size: 14px;
       }
-      .dua-message {
+      .dua-links a {
+        font-size: 16px;
+      }
+      .dua-links div {
         font-size: 16px;
       }
     }
@@ -179,11 +201,22 @@
       </div>
     </div>
     
-    <!-- Countdown Section -->
-    <div class="countdown">
-      <p id="countdown-text">Time left:</p>
-      <div class="timer" id="timer">00:00:00</div>
-      <div class="dua-message" id="dua-message"></div>
+    <!-- Countdown & Dua Links Section -->
+    <div class="countdown-wrapper">
+      <div class="countdown-left">
+        <p id="countdown-text">Time left for:</p>
+        <div class="timer" id="timer">00:00:00</div>
+      </div>
+      <div class="dua-links">
+        <div class="dua-keeping" id="dua-keeping">
+          <a href="#" id="dua-keeping-link">Dua for Keeping Fast</a>
+          <div id="dua-keeping-full" style="display: none;">وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ</div>
+        </div>
+        <div class="dua-opening" id="dua-opening" style="margin-top: 10px;">
+          <a href="#" id="dua-opening-link">Dua for Opening Fast</a>
+          <div id="dua-opening-full" style="display: none;">اللَّهُمَّ لَكَ صُمْتُ وَ عَلَى رِزْقِكَ أَفْطَرْتُ وَ عَلَيْكَ تَوَكَّلْتُ</div>
+        </div>
+      </div>
     </div>
 
     <!-- Table Section -->
@@ -201,7 +234,7 @@
         </tr>
       </thead>
       <tbody id="namaz-timings">
-        <!-- Table rows inserted by JS -->
+        <!-- Rows will be inserted by JavaScript -->
       </tbody>
     </table>
 
@@ -230,7 +263,6 @@
       const year = dateObj.getFullYear();
       return `${day}-${month}-${year}`;
     }
-
     // Modal functionality
     function openModal(imageSrc) {
       const modal = document.getElementById('modal');
@@ -248,7 +280,7 @@
         closeModal();
       }
     });
-
+    
     document.addEventListener('DOMContentLoaded', function() {
       const latitude = 24.9425;
       const longitude = 67.0822;
@@ -279,10 +311,10 @@
             const asrTimeStr = timings.Asr.split(' ')[0];
             const ishaTimeStr = timings.Isha.split(' ')[0];
 
-            // Suhoor time is taken from Imsak field
+            // Suhoor time taken from Imsak field
             let suhoorDate = new Date(`${formattedDate}T${imsakTimeStr}:00`);
 
-            // Build table rows for next 10 days (by day number)
+            // Build table rows for the next 10 days
             const dayNum = parseInt(item.date.gregorian.day, 10);
             const currentDay = currentDate.getDate();
             if (dayNum >= currentDay && dayNum < currentDay + 10) {
@@ -307,60 +339,65 @@
             }
           });
 
+          // Setup click events for dua links (always available)
+          document.getElementById('dua-keeping-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal("images/dua_suhoor.png");
+          });
+          document.getElementById('dua-opening-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal("images/dua_iftar.png");
+          });
+
           // Countdown and Dua display logic:
-          // - Before Imsak: Countdown to Imsak ("Roza Rakhny Ki Dia")
-          //   • If remaining <= 5 minutes, show full dua image for keeping fast.
-          //   • Otherwise, no dua message.
-          // - Between Imsak and Maghrib: Countdown to Maghrib ("Roza Kholny Ki Dua")
-          //   • If remaining <= 10 minutes and > 7 minutes, show full dua image (Arabic).
-          //   • If remaining <= 7 minutes, show a link to view the dua.
-          // - After Maghrib: Countdown to next day's Imsak and show a link for dua for keeping fast.
+          // - Before Imsak: Countdown to Imsak ("Time left for Suhoor")
+          //   • If <= 5 minutes remaining, show full dua text for keeping fast; else show link.
+          // - Between Imsak and Maghrib: Countdown to Maghrib ("Time left for Iftar")
+          //   • If <= 10 minutes remaining, show full dua text for opening fast; else show link.
+          // - After Maghrib: Countdown to next day's Imsak (show link)
           function updateCountdown() {
             const now = new Date();
             let targetTime, countdownText;
-            const duaMessageDiv = document.getElementById('dua-message');
-            // Clear previous dua message
-            duaMessageDiv.innerHTML = '';
-
+            const remainingSuhoor = todayImsak - now;
+            const remainingIftar = todayMaghrib - now;
             if (todayImsak && todayMaghrib) {
               if (now < todayImsak) {
-                // Before Imsak
                 targetTime = todayImsak;
-                countdownText = "Roza Rakhny Ki Dia";
-                const remaining = targetTime - now;
-                if (remaining <= 5 * 60 * 1000 && remaining > 0) {
-                  // Show full dua image for keeping fast
-                  duaMessageDiv.innerHTML = '<img src="images/dua_suhoor.png" alt="Dua for Keeping Fast" style="max-width:100%; height:auto;">';
+                countdownText = "Time left for Suhoor:";
+                if (remainingSuhoor <= 5 * 60 * 1000 && remainingSuhoor > 0) {
+                  // Within 5 minutes to Imsak: show full dua text for keeping fast
+                  document.getElementById('dua-keeping-full').style.display = "block";
+                  document.getElementById('dua-keeping-link').style.display = "none";
                 } else {
-                  // Optionally, you could show nothing or a placeholder
-                  duaMessageDiv.innerHTML = '';
+                  document.getElementById('dua-keeping-full').style.display = "none";
+                  document.getElementById('dua-keeping-link').style.display = "inline";
                 }
+                // Always show the opening fast link when in Suhoor period
+                document.getElementById('dua-opening-full').style.display = "none";
+                document.getElementById('dua-opening-link').style.display = "inline";
               } else if (now >= todayImsak && now < todayMaghrib) {
-                // Between Imsak and Maghrib
                 targetTime = todayMaghrib;
-                countdownText = "Roza Kholny Ki Dua";
-                const remaining = targetTime - now;
-                if (remaining <= 10 * 60 * 1000 && remaining > 7 * 60 * 1000) {
-                  // Show full dua image for opening fast (Arabic dua)
-                  duaMessageDiv.innerHTML = '<img src="images/dua_iftar.png" alt="Dua for Opening Fast" style="max-width:100%; height:auto;">';
-                } else if (remaining <= 7 * 60 * 1000) {
-                  // Show only a link to view the dua
-                  duaMessageDiv.innerHTML = '<a href="#" id="dua-iftar-link">View Dua for Opening Fast</a>';
-                  document.getElementById('dua-iftar-link').addEventListener('click', function(e) {
-                    e.preventDefault();
-                    openModal("images/dua_iftar.png");
-                  });
+                countdownText = "Time left for Iftar:";
+                if (remainingIftar <= 10 * 60 * 1000 && remainingIftar > 0) {
+                  // Within 10 minutes to Maghrib: show full dua text for opening fast
+                  document.getElementById('dua-opening-full').style.display = "block";
+                  document.getElementById('dua-opening-link').style.display = "none";
+                } else {
+                  document.getElementById('dua-opening-full').style.display = "none";
+                  document.getElementById('dua-opening-link').style.display = "inline";
                 }
+                // Always show the keeping fast link in this period
+                document.getElementById('dua-keeping-full').style.display = "none";
+                document.getElementById('dua-keeping-link').style.display = "inline";
               } else {
-                // After Maghrib: Countdown to next day's Imsak
+                // After Maghrib: countdown to next day's Imsak
                 targetTime = new Date(todayImsak.getTime() + 24 * 60 * 60 * 1000);
-                countdownText = "Roza Rakhny Ki Dua next day";
-                // Show link for dua for keeping fast
-                duaMessageDiv.innerHTML = '<a href="#" id="dua-suhoor-link">View Dua for Keeping Fast</a>';
-                document.getElementById('dua-suhoor-link').addEventListener('click', function(e) {
-                  e.preventDefault();
-                  openModal("images/dua_suhoor.png");
-                });
+                countdownText = "Time left for Suhoor:";
+                // Always show links after Maghrib
+                document.getElementById('dua-keeping-full').style.display = "none";
+                document.getElementById('dua-keeping-link').style.display = "inline";
+                document.getElementById('dua-opening-full').style.display = "none";
+                document.getElementById('dua-opening-link').style.display = "inline";
               }
               const diff = targetTime - now;
               const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
