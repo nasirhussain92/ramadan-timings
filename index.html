@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ramadan Namaz Timings Karachi Central</title>
+  <title>Ramadan Namaz Timings - Karachi Central</title>
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap" rel="stylesheet">
   <style>
     /* Basic Reset */
@@ -51,6 +51,9 @@
       text-transform: uppercase;
       letter-spacing: 2px;
       color: gold;
+    }
+    .title p {
+      font-size: 16px;
     }
     .countdown {
       margin-top: 20px;
@@ -135,8 +138,8 @@
         <img src="images/my-photo.png" alt="Nasir Hussain">
       </div>
       <div class="title">
-        <h1>Namaz Timings During Ramzan</h1>
-        <p>Suhoor and Iftar timings For Next 10 Days</p>
+        <h1>Ramadan Namaz Timings</h1>
+        <p>For Karachi Central (Next 10 Days)</p>
       </div>
     </div>
     
@@ -149,7 +152,7 @@
       <thead>
         <tr>
           <th>Date</th>
-          <th>Suhoor</th>
+          <th>Suhoor (Imsak)</th>
           <th>Fajr</th>
           <th>Sunrise</th>
           <th>Dhuhr</th>
@@ -197,7 +200,7 @@
         .then(data => {
           const timingsArray = data.data;
           const tbody = document.getElementById('namaz-timings');
-          let todayFajr = null;
+          let todayImsak = null;
           let todayMaghrib = null;
           const todayStr = formatDateDDMMYYYY(currentDate); // "DD-MM-YYYY"
 
@@ -205,7 +208,8 @@
             const dateStr = item.date.gregorian.date; // "DD-MM-YYYY"
             const formattedDate = convertDateFormat(dateStr); // "YYYY-MM-DD"
             const timings = item.timings;
-            // Extract times (remove timezone info)
+            // Use Imsak from API for Suhoor time
+            const imsakTimeStr = timings.Imsak.split(' ')[0];
             const fajrTimeStr = timings.Fajr.split(' ')[0];
             const maghribTimeStr = timings.Maghrib.split(' ')[0];
             const sunriseTimeStr = timings.Sunrise.split(' ')[0];
@@ -213,10 +217,7 @@
             const asrTimeStr = timings.Asr.split(' ')[0];
             const ishaTimeStr = timings.Isha.split(' ')[0];
 
-            // Calculate Suhoor as 10 minutes before Fajr
-            let suhoorDate = new Date(`${formattedDate}T${fajrTimeStr}:00`);
-            suhoorDate.setMinutes(suhoorDate.getMinutes() - 10);
-            const suhoorDisplay = suhoorDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            let suhoorDate = new Date(`${formattedDate}T${imsakTimeStr}:00`);
 
             // Build table rows for the next 10 days
             const dayNum = parseInt(item.date.gregorian.day, 10);
@@ -225,7 +226,7 @@
               const row = document.createElement('tr');
               row.innerHTML = `
                 <td>${dateStr}</td>
-                <td>${suhoorDisplay}</td>
+                <td>${suhoorDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</td>
                 <td>${fajrTimeStr}</td>
                 <td>${sunriseTimeStr}</td>
                 <td>${dhuhrTimeStr}</td>
@@ -236,31 +237,30 @@
               tbody.appendChild(row);
             }
 
-            // Capture today's Fajr and Maghrib for countdown
+            // Capture today's Imsak and Maghrib for countdown
             if (dateStr === todayStr) {
-              todayFajr = new Date(`${formattedDate}T${fajrTimeStr}:00`);
+              todayImsak = new Date(`${formattedDate}T${imsakTimeStr}:00`);
               todayMaghrib = new Date(`${formattedDate}T${maghribTimeStr}:00`);
             }
           });
 
           // Countdown Logic:
-          // - Before Fajr: Countdown to Fajr (end of Suhoor)
-          // - Between Fajr and Maghrib: Countdown to Maghrib (Iftar)
-          // - After Maghrib: Countdown to next day's Fajr
+          // - Before Imsak: Countdown to Imsak ("Roza Rakhny Ki Dia") 
+          // - Between Imsak and Maghrib: Countdown to Maghrib ("Roza Kholny Ki Dua") 
+          // - After Maghrib: Countdown to next day's Imsak ("Roza Rakhny Ki Dia next day")
           function updateCountdown() {
             const now = new Date();
             let targetTime, countdownText;
-            if (todayFajr && todayMaghrib) {
-              if (now < todayFajr) {
-                targetTime = todayFajr;
-                countdownText = "Time left for Suhoor (Fajr):";
-              } else if (now >= todayFajr && now < todayMaghrib) {
+            if (todayImsak && todayMaghrib) {
+              if (now < todayImsak) {
+                targetTime = todayImsak;
+                countdownText = "Roza Rakhny Ki Dia";
+              } else if (now >= todayImsak && now < todayMaghrib) {
                 targetTime = todayMaghrib;
-                countdownText = "Time left for Iftar (Maghrib):";
+                countdownText = "Roza Kholny Ki Dua";
               } else {
-                // After Maghrib, target next day's Fajr (approximation: add 24 hours to today's Fajr)
-                targetTime = new Date(todayFajr.getTime() + 24 * 60 * 60 * 1000);
-                countdownText = "Time left for Suhoor (Fajr) next day:";
+                targetTime = new Date(todayImsak.getTime() + 24 * 60 * 60 * 1000);
+                countdownText = "Roza Rakhny Ki Dia next day";
               }
               const diff = targetTime - now;
               const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
