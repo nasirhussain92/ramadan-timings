@@ -1,94 +1,433 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ramadan Timings - Karachi Central</title>
-    <link rel="stylesheet" href="styles.css">
-    <script defer src="script.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ramadan Namaz Timings - Karachi Central</title>
+  <!-- Include a good Arabic font from Google Fonts (if available) -->
+  <link href="https://fonts.googleapis.com/css2?family=Amiri&display=swap" rel="stylesheet">
+  <style>
+    /* Basic Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Raleway', sans-serif;
+      background: url('images/ramadan-background.jpg') no-repeat center center/cover;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: rgba(0, 0, 0, 0.65);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(255, 223, 186, 0.5);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 223, 186, 0.2);
+      border-radius: 10px;
+      padding: 15px;
+      flex-wrap: wrap;
+    }
+    .logo img {
+      width: 100px;
+      border-radius: 50%;
+      border: 3px solid gold;
+    }
+    .title {
+      flex: 1;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .title h1 {
+      font-size: 30px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: gold;
+    }
+    .title p {
+      font-size: 16px;
+    }
+    /* Countdown & Dua Links Section */
+    .countdown-wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 223, 186, 0.2);
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+      color: gold;
+      font-family: 'Courier New', monospace;
+    }
+    .countdown-left {
+      text-align: left;
+    }
+    .countdown-left p {
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+    .timer {
+      font-size: 40px;
+      font-weight: bold;
+      background: black;
+      padding: 15px;
+      border-radius: 5px;
+      display: inline-block;
+    }
+    .dua-links {
+      text-align: right;
+      min-width: 200px;
+    }
+    .dua-links a {
+      color: gold;
+      text-decoration: none;
+      font-size: 18px;
+      cursor: pointer;
+      margin-bottom: 5px;
+      display: block;
+    }
+    /* Style for full dua text (using Arabic font) */
+    .dua-full {
+      font-family: 'Amiri', serif;
+      font-size: 24px;
+      font-weight: bold;
+      direction: rtl;
+      margin-bottom: 5px;
+    }
+    /* Table Styles */
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      background: rgba(255, 223, 186, 0.2);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    thead {
+      background: gold;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.8);
+    }
+    .modal-content {
+      margin: 10% auto;
+      display: block;
+      max-width: 90%;
+      max-height: 80%;
+    }
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 35px;
+      color: #f1f1f1;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    /* Mobile Responsive Styles */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        padding: 10px;
+      }
+      .header {
+        flex-direction: column;
+      }
+      .logo img {
+        width: 80px;
+      }
+      .title h1 {
+        font-size: 24px;
+      }
+      .countdown-wrapper {
+        flex-direction: column;
+      }
+      .countdown-left p {
+        font-size: 20px;
+      }
+      .timer {
+        font-size: 32px;
+        padding: 10px;
+      }
+      th, td {
+        padding: 8px;
+        font-size: 14px;
+      }
+      .dua-links a {
+        font-size: 16px;
+      }
+      .dua-full {
+        font-size: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Ramadan Timings - Karachi Central</h1>
-
-        <div class="countdown-box">
-            <h2 id="countdown-title">Time left for Suhoor</h2>
-            <p id="countdown-timer">00:00:00</p>
-        </div>
-
-        <!-- Suhoor & Iftar Duas -->
-        <div class="dua-links">
-            <button onclick="showDua('suhoor')">📜 Dua for Keeping Fast</button>
-            <button onclick="showDua('iftar')">📜 Dua for Breaking Fast</button>
-        </div>
-
-        <!-- Dua Pop-up -->
-        <div id="duaPopup" class="dua-popup">
-            <div class="dua-content">
-                <span class="close-btn" onclick="closeDua()">×</span>
-                <p id="dua-text"></p>
-            </div>
-        </div>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <img src="images/my-photo.png" alt="Nasir Hussain">
+      </div>
+      <div class="title">
+        <h1>Ramadan Namaz Timings</h1>
+        <p>For Karachi Central (Next 10 Days)</p>
+      </div>
     </div>
-
-    <script>
-        // Set Suhoor and Iftar times (example: Adjust these for real-time API integration)
-        const suhoorTime = new Date();
-        suhoorTime.setHours(4, 45, 0); // Example: 4:45 AM
-        
-        const iftarTime = new Date();
-        iftarTime.setHours(18, 35, 0); // Example: 6:35 PM
-
-        function updateCountdown() {
-            const now = new Date();
-            let targetTime, titleText;
-
-            if (now < suhoorTime) {
-                targetTime = suhoorTime;
-                titleText = "Time left for Suhoor";
-            } else {
-                targetTime = iftarTime;
-                titleText = "Time left for Iftar";
-            }
-
-            const timeDiff = targetTime - now;
-            const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
-            const seconds = Math.floor((timeDiff / 1000) % 60);
-
-            document.getElementById("countdown-title").innerText = titleText;
-            document.getElementById("countdown-timer").innerText = 
-                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-            // Show Suhoor Dua 5 minutes before Suhoor
-            if (timeDiff <= 5 * 60 * 1000 && titleText === "Time left for Suhoor") {
-                document.getElementById("dua-text").innerHTML = "وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ";
-                document.getElementById("duaPopup").style.display = "block";
+    
+    <!-- Countdown & Dua Links -->
+    <div class="countdown-wrapper">
+      <div class="countdown-left">
+        <p id="countdown-text">Time left for:</p>
+        <div class="timer" id="timer">00:00:00</div>
+      </div>
+      <div class="dua-links">
+        <div class="dua-keeping" id="dua-keeping">
+          <a id="dua-keeping-link">Dua for Keeping Fast</a>
+          <div id="dua-keeping-full" class="dua-full" style="display: none;">وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ</div>
+        </div>
+        <div class="dua-opening" id="dua-opening" style="margin-top: 10px;">
+          <a id="dua-opening-link">Dua for Opening Fast</a>
+          <div id="dua-opening-full" class="dua-full" style="display: none;">اللَّهُمَّ لَكَ صُمْتُ وَ عَلَى رِزْقِكَ أَفْطَرْتُ وَ عَلَيْكَ تَوَكَّلْتُ</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Namaz Timings Table -->
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Suhoor (Imsak)</th>
+          <th>Fajr</th>
+          <th>Sunrise</th>
+          <th>Dhuhr</th>
+          <th>Asr</th>
+          <th>Maghrib</th>
+          <th>Isha</th>
+        </tr>
+      </thead>
+      <tbody id="namaz-timings">
+        <!-- Table rows will be injected here by JavaScript -->
+      </tbody>
+    </table>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <p>Live Timings - Data Fetched via API | Nasir Hussain</p>
+    </div>
+  </div>
+  
+  <!-- Modal for Dua Pop-up (if needed) -->
+  <div id="modal" class="modal">
+    <span class="modal-close" id="modal-close">&times;</span>
+    <img class="modal-content" id="modal-img" src="" alt="Dua">
+  </div>
+  
+  <script>
+    // Helper: Convert "DD-MM-YYYY" to "YYYY-MM-DD"
+    function convertDateFormat(dateStr) {
+      const parts = dateStr.split('-'); // [DD, MM, YYYY]
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    // Helper: Format a Date object as "DD-MM-YYYY"
+    function formatDateDDMMYYYY(dateObj) {
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const year = dateObj.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+    // Modal functionality (if you want pop-ups for additional info)
+    function openModal(imageSrc) {
+      const modal = document.getElementById('modal');
+      const modalImg = document.getElementById('modal-img');
+      modalImg.src = imageSrc;
+      modal.style.display = "block";
+    }
+    function closeModal() {
+      document.getElementById('modal').style.display = "none";
+    }
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    window.addEventListener('click', function(e) {
+      const modal = document.getElementById('modal');
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+    
+    // Main Logic: Fetch prayer timings and update countdown and table
+    document.addEventListener('DOMContentLoaded', function() {
+      const latitude = 24.9425;
+      const longitude = 67.0822;
+      const method = 2;
+      const currentDate = new Date();
+      const month = currentDate.getMonth() + 1;
+      const year = currentDate.getFullYear();
+      const apiUrl = `https://api.aladhan.com/v1/calendar?latitude=${latitude}&longitude=${longitude}&method=${method}&month=${month}&year=${year}`;
+      
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+          const timingsArray = data.data;
+          const tbody = document.getElementById('namaz-timings');
+          let todayImsak = null;
+          let todayMaghrib = null;
+          const todayStr = formatDateDDMMYYYY(currentDate); // "DD-MM-YYYY"
+          
+          timingsArray.forEach(item => {
+            const dateStr = item.date.gregorian.date; // "DD-MM-YYYY"
+            const formattedDate = convertDateFormat(dateStr); // "YYYY-MM-DD"
+            const timings = item.timings;
+            const imsakTimeStr = timings.Imsak.split(' ')[0];
+            const fajrTimeStr = timings.Fajr.split(' ')[0];
+            const maghribTimeStr = timings.Maghrib.split(' ')[0];
+            const sunriseTimeStr = timings.Sunrise.split(' ')[0];
+            const dhuhrTimeStr = timings.Dhuhr.split(' ')[0];
+            const asrTimeStr = timings.Asr.split(' ')[0];
+            const ishaTimeStr = timings.Isha.split(' ')[0];
+            
+            // Suhoor is taken from Imsak field
+            let suhoorDate = new Date(`${formattedDate}T${imsakTimeStr}:00`);
+            
+            // Build table rows for next 10 days
+            const dayNum = parseInt(item.date.gregorian.day, 10);
+            const currentDay = currentDate.getDate();
+            if (dayNum >= currentDay && dayNum < currentDay + 10) {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${dateStr}</td>
+                <td>${suhoorDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}</td>
+                <td>${fajrTimeStr}</td>
+                <td>${sunriseTimeStr}</td>
+                <td>${dhuhrTimeStr}</td>
+                <td>${asrTimeStr}</td>
+                <td>${maghribTimeStr}</td>
+                <td>${ishaTimeStr}</td>
+              `;
+              tbody.appendChild(row);
             }
             
-            // Show Iftar Dua 10 minutes before Iftar, keep it for 3 minutes
-            if (timeDiff <= 10 * 60 * 1000 && titleText === "Time left for Iftar") {
-                document.getElementById("dua-text").innerHTML = "اللَّهُمَّ لَكَ صُمْتُ وَ عَلَى رِزْقِكَ أَفْطَرْتُ وَ عَلَيْكَ تَوَكَّلْتُ";
-                document.getElementById("duaPopup").style.display = "block";
-                setTimeout(() => document.getElementById("duaPopup").style.display = "none", 3 * 60 * 1000);
+            // Capture today's Imsak and Maghrib for countdown
+            if (dateStr === todayStr) {
+              todayImsak = new Date(`${formattedDate}T${imsakTimeStr}:00`);
+              todayMaghrib = new Date(`${formattedDate}T${maghribTimeStr}:00`);
             }
-        }
-
-        setInterval(updateCountdown, 1000);
-
-        function showDua(type) {
-            const duas = {
-                suhoor: "وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ",
-                iftar: "اللَّهُمَّ لَكَ صُمْتُ وَ عَلَى رِزْقِكَ أَفْطَرْتُ وَ عَلَيْكَ تَوَكَّلْتُ"
-            };
-            document.getElementById("dua-text").innerHTML = duas[type];
-            document.getElementById("duaPopup").style.display = "block";
-        }
-
-        function closeDua() {
-            document.getElementById("duaPopup").style.display = "none";
-        }
-    </script>
+          });
+          
+          // Countdown & Dua Logic:
+          // - Before Imsak: Countdown to Imsak ("Time left for Suhoor")
+          //   • If <= 5 minutes remaining, show full dua text for keeping fast.
+          // - Between Imsak and Maghrib: Countdown to Maghrib ("Time left for Iftar")
+          //   • If <= 10 minutes remaining, show full dua text for opening fast.
+          // - After Maghrib: Countdown to next day's Imsak.
+          function updateCountdown() {
+            const now = new Date();
+            let targetTime, countdownText;
+            const duaKeepingLink = document.getElementById('dua-keeping-link');
+            const duaKeepingFull = document.getElementById('dua-keeping-full');
+            const duaOpeningLink = document.getElementById('dua-opening-link');
+            const duaOpeningFull = document.getElementById('dua-opening-full');
+            // Clear any existing dua display if not in condition
+            // (We control via style.display below)
+            
+            if (todayImsak && todayMaghrib) {
+              if (now < todayImsak) {
+                targetTime = todayImsak;
+                countdownText = "Time left for Suhoor:";
+                const remainingSuhoor = todayImsak - now;
+                if (remainingSuhoor <= 5 * 60 * 1000 && remainingSuhoor > 0) {
+                  // Within 5 minutes to Imsak: show full dua text for keeping fast
+                  duaKeepingFull.style.display = "block";
+                  duaKeepingLink.style.display = "none";
+                } else {
+                  duaKeepingFull.style.display = "none";
+                  duaKeepingLink.style.display = "block";
+                }
+                // Always show opening fast link when in Suhoor period
+                duaOpeningFull.style.display = "none";
+                duaOpeningLink.style.display = "block";
+              } else if (now >= todayImsak && now < todayMaghrib) {
+                targetTime = todayMaghrib;
+                countdownText = "Time left for Iftar:";
+                const remainingIftar = todayMaghrib - now;
+                if (remainingIftar <= 10 * 60 * 1000 && remainingIftar > 0) {
+                  // Within 10 minutes to Maghrib: show full dua text for opening fast
+                  duaOpeningFull.style.display = "block";
+                  duaOpeningLink.style.display = "none";
+                } else {
+                  duaOpeningFull.style.display = "none";
+                  duaOpeningLink.style.display = "block";
+                }
+                // Always show keeping fast link in this period
+                duaKeepingFull.style.display = "none";
+                duaKeepingLink.style.display = "block";
+              } else {
+                // After Maghrib: Countdown to next day's Imsak
+                targetTime = new Date(todayImsak.getTime() + 24 * 60 * 60 * 1000);
+                countdownText = "Time left for Suhoor:";
+                duaKeepingFull.style.display = "none";
+                duaKeepingLink.style.display = "block";
+                duaOpeningFull.style.display = "none";
+                duaOpeningLink.style.display = "block";
+              }
+              const diff = targetTime - now;
+              const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+              const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+              const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+              document.getElementById('countdown-text').innerText = countdownText;
+              document.getElementById('timer').innerText = `${hours}:${minutes}:${seconds}`;
+            } else {
+              document.getElementById('timer').innerText = 'N/A';
+            }
+            setTimeout(updateCountdown, 1000);
+          }
+          updateCountdown();
+        })
+        .catch(error => console.error('Error fetching prayer timings:', error));
+      
+      // Dua link click events: always available
+      document.getElementById('dua-keeping-link').addEventListener('click', function() {
+        // Open modal with keeping fast dua text (if desired, or simply show text)
+        // For now, we just toggle the dua text popup modal
+        alert("Dua for Keeping Fast:\n\nوَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ");
+      });
+      document.getElementById('dua-opening-link').addEventListener('click', function() {
+        alert("Dua for Opening Fast:\n\nاللَّهُمَّ لَكَ صُمْتُ وَ عَلَى رِزْقِكَ أَفْطَرْتُ وَ عَلَيْكَ تَوَكَّلْتُ");
+      });
+    });
+  </script>
 </body>
 </html>
-
