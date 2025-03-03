@@ -76,6 +76,11 @@
       display: inline-block;
       margin-top: 5px;
     }
+    /* Dua message container (near the countdown) */
+    .dua-message {
+      margin-top: 10px;
+      font-size: 20px;
+    }
     table {
       width: 100%;
       margin-top: 20px;
@@ -99,6 +104,33 @@
       margin-top: 20px;
       font-size: 14px;
       color: #ccc;
+    }
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.8);
+    }
+    .modal-content {
+      margin: 10% auto;
+      display: block;
+      max-width: 90%;
+      max-height: 80%;
+    }
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 35px;
+      color: #f1f1f1;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
     }
     /* Mobile Responsive Styles */
     @media (max-width: 600px) {
@@ -128,11 +160,15 @@
         padding: 8px;
         font-size: 14px;
       }
+      .dua-message {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- Header Section -->
     <div class="header">
       <div class="logo">
         <img src="images/my-photo.png" alt="Nasir Hussain">
@@ -143,11 +179,14 @@
       </div>
     </div>
     
+    <!-- Countdown Section -->
     <div class="countdown">
       <p id="countdown-text">Time left:</p>
       <div class="timer" id="timer">00:00:00</div>
+      <div class="dua-message" id="dua-message"></div>
     </div>
 
+    <!-- Table Section -->
     <table>
       <thead>
         <tr>
@@ -162,13 +201,20 @@
         </tr>
       </thead>
       <tbody id="namaz-timings">
-        <!-- Rows will be inserted here by JavaScript -->
+        <!-- Table rows inserted by JS -->
       </tbody>
     </table>
 
+    <!-- Footer Section -->
     <div class="footer">
       <p>Live Timings - Data Fetched via API | Nasir Hussain</p>
     </div>
+  </div>
+
+  <!-- Modal for Dua Images -->
+  <div id="modal" class="modal">
+    <span class="modal-close" id="modal-close">&times;</span>
+    <img class="modal-content" id="modal-img" src="" alt="Dua">
   </div>
 
   <script>
@@ -177,14 +223,31 @@
       const parts = dateStr.split('-'); // [DD, MM, YYYY]
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
-
-    // Helper: Format a Date object as "DD-MM-YYYY"
+    // Helper: Format Date object as "DD-MM-YYYY"
     function formatDateDDMMYYYY(dateObj) {
       const day = String(dateObj.getDate()).padStart(2, '0');
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const year = dateObj.getFullYear();
       return `${day}-${month}-${year}`;
     }
+
+    // Modal functionality
+    function openModal(imageSrc) {
+      const modal = document.getElementById('modal');
+      const modalImg = document.getElementById('modal-img');
+      modalImg.src = imageSrc;
+      modal.style.display = "block";
+    }
+    function closeModal() {
+      document.getElementById('modal').style.display = "none";
+    }
+    document.getElementById('modal-close').addEventListener('click', closeModal);
+    window.addEventListener('click', function(e) {
+      const modal = document.getElementById('modal');
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', function() {
       const latitude = 24.9425;
@@ -208,7 +271,6 @@
             const dateStr = item.date.gregorian.date; // "DD-MM-YYYY"
             const formattedDate = convertDateFormat(dateStr); // "YYYY-MM-DD"
             const timings = item.timings;
-            // Use Imsak from API for Suhoor time
             const imsakTimeStr = timings.Imsak.split(' ')[0];
             const fajrTimeStr = timings.Fajr.split(' ')[0];
             const maghribTimeStr = timings.Maghrib.split(' ')[0];
@@ -217,9 +279,10 @@
             const asrTimeStr = timings.Asr.split(' ')[0];
             const ishaTimeStr = timings.Isha.split(' ')[0];
 
+            // Suhoor time is taken from Imsak field
             let suhoorDate = new Date(`${formattedDate}T${imsakTimeStr}:00`);
 
-            // Build table rows for the next 10 days
+            // Build table rows for next 10 days (by day number)
             const dayNum = parseInt(item.date.gregorian.day, 10);
             const currentDay = currentDate.getDate();
             if (dayNum >= currentDay && dayNum < currentDay + 10) {
@@ -244,23 +307,60 @@
             }
           });
 
-          // Countdown Logic:
-          // - Before Imsak: Countdown to Imsak ("Roza Rakhny Ki Dia") 
-          // - Between Imsak and Maghrib: Countdown to Maghrib ("Roza Kholny Ki Dua") 
-          // - After Maghrib: Countdown to next day's Imsak ("Roza Rakhny Ki Dia next day")
+          // Countdown and Dua display logic:
+          // - Before Imsak: Countdown to Imsak ("Roza Rakhny Ki Dia")
+          //   • If remaining <= 5 minutes, show full dua image for keeping fast.
+          //   • Otherwise, no dua message.
+          // - Between Imsak and Maghrib: Countdown to Maghrib ("Roza Kholny Ki Dua")
+          //   • If remaining <= 10 minutes and > 7 minutes, show full dua image (Arabic).
+          //   • If remaining <= 7 minutes, show a link to view the dua.
+          // - After Maghrib: Countdown to next day's Imsak and show a link for dua for keeping fast.
           function updateCountdown() {
             const now = new Date();
             let targetTime, countdownText;
+            const duaMessageDiv = document.getElementById('dua-message');
+            // Clear previous dua message
+            duaMessageDiv.innerHTML = '';
+
             if (todayImsak && todayMaghrib) {
               if (now < todayImsak) {
+                // Before Imsak
                 targetTime = todayImsak;
                 countdownText = "Roza Rakhny Ki Dia";
+                const remaining = targetTime - now;
+                if (remaining <= 5 * 60 * 1000 && remaining > 0) {
+                  // Show full dua image for keeping fast
+                  duaMessageDiv.innerHTML = '<img src="images/dua_suhoor.png" alt="Dua for Keeping Fast" style="max-width:100%; height:auto;">';
+                } else {
+                  // Optionally, you could show nothing or a placeholder
+                  duaMessageDiv.innerHTML = '';
+                }
               } else if (now >= todayImsak && now < todayMaghrib) {
+                // Between Imsak and Maghrib
                 targetTime = todayMaghrib;
                 countdownText = "Roza Kholny Ki Dua";
+                const remaining = targetTime - now;
+                if (remaining <= 10 * 60 * 1000 && remaining > 7 * 60 * 1000) {
+                  // Show full dua image for opening fast (Arabic dua)
+                  duaMessageDiv.innerHTML = '<img src="images/dua_iftar.png" alt="Dua for Opening Fast" style="max-width:100%; height:auto;">';
+                } else if (remaining <= 7 * 60 * 1000) {
+                  // Show only a link to view the dua
+                  duaMessageDiv.innerHTML = '<a href="#" id="dua-iftar-link">View Dua for Opening Fast</a>';
+                  document.getElementById('dua-iftar-link').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openModal("images/dua_iftar.png");
+                  });
+                }
               } else {
+                // After Maghrib: Countdown to next day's Imsak
                 targetTime = new Date(todayImsak.getTime() + 24 * 60 * 60 * 1000);
-                countdownText = "Roza Rakhny Ki Dia next day";
+                countdownText = "Roza Rakhny Ki Dua next day";
+                // Show link for dua for keeping fast
+                duaMessageDiv.innerHTML = '<a href="#" id="dua-suhoor-link">View Dua for Keeping Fast</a>';
+                document.getElementById('dua-suhoor-link').addEventListener('click', function(e) {
+                  e.preventDefault();
+                  openModal("images/dua_suhoor.png");
+                });
               }
               const diff = targetTime - now;
               const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
