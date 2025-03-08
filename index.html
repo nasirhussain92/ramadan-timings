@@ -442,64 +442,6 @@
             </div>
         </div>
     </div>
-
-    <script>
-        // Set Suhoor and Iftar times (example: Adjust these for real-time API integration)
-        const suhoorTime = new Date();
-        suhoorTime.setHours(4, 45, 0); // Example: 4:45 AM
-        
-        const iftarTime = new Date();
-        iftarTime.setHours(18, 35, 0); // Example: 6:35 PM
-
-        function updateCountdown() {
-            const now = new Date();
-            let targetTime, titleText;
-
-            if (now < suhoorTime) {
-                targetTime = suhoorTime;
-                titleText = "Time left for Suhoor";
-            } else {
-                targetTime = iftarTime;
-                titleText = "Time left for Iftar";
-            }
-
-            const timeDiff = targetTime - now;
-            const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((timeDiff / (1000 * 60)) % 60);
-            const seconds = Math.floor((timeDiff / 1000) % 60);
-
-            document.getElementById("countdown-title").innerText = titleText;
-            document.getElementById("countdown-timer").innerText = 
-                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-            // Show Suhoor Dua 5 minutes before Suhoor
-            if (timeDiff <= 5 * 60 * 1000 && titleText === "Time left for Suhoor") {
-                document.getElementById("dua-text").innerHTML = "وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ";
-                document.getElementById("duaPopup").style.display = "block";
-            }
-            
-            // Show Iftar Dua 10 minutes before Iftar, keep it for 3 minutes
-            if (timeDiff <= 10 * 60 * 1000 && titleText === "Time left for Iftar") {
-                document.getElementById("dua-text").innerHTML = "اللَّهُمَّ لَكَ صُمْتُ وَ عَلَى رِزْقِكَ أَفْطَرْتُ وَ عَلَيْكَ تَوَكَّلْتُ";
-                document.getElementById("duaPopup").style.display = "block";
-                setTimeout(() => document.getElementById("duaPopup").style.display = "none", 3 * 60 * 1000);
-            }
-        }
-
-        setInterval(updateCountdown, 1000);
-
-        function showDua(type) {
-            const duas = {
-                suhoor: "وَبِصَوْمِ غَدٍ نَّوَيْتُ مِنْ شَهْرِ رَمَضَانَ",
-                iftar: "اللَّهُمَّ لَكَ صُمْتُ وَ عَلَى رِزْقِكَ أَفْطَرْتُ وَ عَلَيْكَ تَوَكَّلْتُ"
-            };
-            document.getElementById("dua-text").innerHTML = duas[type];
-            document.getElementById("duaPopup").style.display = "block";
-        }
-
-        function closeDua() {
-            document.getElementById("duaPopup").style.display = "none";
-        }
     </script>
 </body>
 </html>
