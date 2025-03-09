@@ -57,6 +57,20 @@
     .title p {
       font-size: 16px;
     }
+    /* Music Toggle Button */
+    .music-toggle {
+      text-align: center;
+      margin: 15px 0;
+    }
+    .music-toggle button {
+      background: gold;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      font-size: 18px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
     /* Countdown & Dua Links Section */
     .countdown-wrapper {
       display: flex;
@@ -129,7 +143,7 @@
       font-size: 14px;
       color: #ccc;
     }
-    /* Modal Styles for Dua Pop-up (as text) */
+    /* Modal Styles for Dua Pop-up (Text Display) */
     .modal {
       display: none;
       position: fixed;
@@ -170,7 +184,7 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.9);
+      background: rgba(0, 0, 0, 0.9);
       color: white;
       font-size: 24px;
       align-items: center;
@@ -250,6 +264,11 @@
       </div>
     </div>
     
+    <!-- Music Toggle Button -->
+    <div class="music-toggle">
+      <button id="toggle-music-button">Stop Music</button>
+    </div>
+    
     <!-- Countdown & Dua Links Section -->
     <div class="countdown-wrapper">
       <div class="countdown-left">
@@ -325,6 +344,21 @@
       document.getElementById('musicOverlay').style.display = 'none';
     }
     
+    // Music Toggle Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggleButton = document.getElementById('toggle-music-button');
+      const music = document.getElementById('background-music');
+      toggleButton.addEventListener('click', function() {
+        if (!music.paused) {
+          music.pause();
+          toggleButton.innerText = "Play Music";
+        } else {
+          music.play();
+          toggleButton.innerText = "Stop Music";
+        }
+      });
+    });
+    
     // Helper: Convert "DD-MM-YYYY" to "YYYY-MM-DD"
     function convertDateFormat(dateStr) {
       const parts = dateStr.split('-'); // [DD, MM, YYYY]
@@ -387,7 +421,7 @@
             const asrTimeStr = timings.Asr.split(' ')[0];
             const ishaTimeStr = timings.Isha.split(' ')[0];
             
-            // Create suhoor Date from Imsak, convert from UTC by appending "Z" then add 5 hours.
+            // Suhoor is taken from Imsak field (convert API time from UTC by appending "Z" then adding 5 hours)
             let suhoorDate = new Date(`${formattedDate}T${imsakTimeStr}:00Z`);
             suhoorDate.setHours(suhoorDate.getHours() + 5);
             
@@ -409,7 +443,7 @@
               tbody.appendChild(row);
             }
             
-            // Capture today's Imsak and Maghrib for countdown (convert times to local time)
+            // Capture today's Imsak and Maghrib for countdown (convert API time from UTC by appending "Z" then adding 5 hours)
             if (dateStr === todayStr) {
               todayImsak = new Date(`${formattedDate}T${imsakTimeStr}:00Z`);
               todayImsak.setHours(todayImsak.getHours() + 5);
