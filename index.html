@@ -57,20 +57,28 @@
     .title p {
       font-size: 16px;
     }
-    /* Music Controls */
+    /* Music Controls (moved to left with labels) */
     .music-controls {
-      display: inline-flex;
-      justify-content: center;
+      display: flex;
       align-items: center;
+      justify-content: flex-start;
       gap: 10px;
-      margin: 15px auto;
+      margin: 15px 0;
+      font-size: 14px;
     }
-    .music-controls button {
+    .music-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .music-control span {
+      font-weight: bold;
+    }
+    .music-control button {
       background: gold;
       color: black;
       border: none;
-      padding: 5px 10px;
-      font-size: 16px;
+      padding: 5px 8px;
       border-radius: 5px;
       cursor: pointer;
     }
@@ -187,7 +195,7 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.9);
+      background: rgba(0, 0, 0, 0.9);
       color: white;
       font-size: 24px;
       align-items: center;
@@ -245,9 +253,12 @@
         font-size: 22px;
         padding: 15px;
       }
-      .music-controls button {
+      .music-controls .music-control button {
         font-size: 14px;
-        padding: 5px 8px;
+        padding: 4px 6px;
+      }
+      .music-controls .control-label {
+        font-size: 14px;
       }
     }
   </style>
@@ -271,11 +282,20 @@
       </div>
     </div>
     
-    <!-- Music Controls -->
+    <!-- Music Controls (placed on the left side with labels) -->
     <div class="music-controls">
-      <button id="toggle-music-button">⏯</button>
-      <button id="volume-down-button">-</button>
-      <button id="volume-up-button">+</button>
+      <div class="music-control">
+        <span class="control-label">Music:</span>
+        <button id="toggle-music-button">⏸</button>
+      </div>
+      <div class="music-control">
+        <span class="control-label">Vol −:</span>
+        <button id="volume-down-button">−</button>
+      </div>
+      <div class="music-control">
+        <span class="control-label">Vol +:</span>
+        <button id="volume-up-button">+</button>
+      </div>
     </div>
     
     <!-- Countdown & Dua Links Section -->
