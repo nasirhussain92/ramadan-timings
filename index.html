@@ -57,9 +57,9 @@
     .title p {
       font-size: 16px;
     }
-    /* Music Controls (moved to left with labels) */
+    /* Music Controls (left side with labels) */
     .music-controls {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       justify-content: flex-start;
       gap: 10px;
@@ -282,7 +282,7 @@
       </div>
     </div>
     
-    <!-- Music Controls (placed on the left side with labels) -->
+    <!-- Music Controls (left side with labels) -->
     <div class="music-controls">
       <div class="music-control">
         <span class="control-label">Music:</span>
@@ -465,9 +465,8 @@
             const asrTimeStr = timings.Asr.split(' ')[0];
             const ishaTimeStr = timings.Isha.split(' ')[0];
             
-            // Suhoor is taken from Imsak field (convert API time from UTC by appending "Z" then adding 5 hours)
-            let suhoorDate = new Date(`${formattedDate}T${imsakTimeStr}:00Z`);
-            suhoorDate.setHours(suhoorDate.getHours() + 5);
+            // Suhoor is taken from Imsak field (treated as local time)
+            let suhoorDate = new Date(`${formattedDate}T${imsakTimeStr}:00`);
             
             // Build table rows for next 10 days
             const dayNum = parseInt(item.date.gregorian.day, 10);
@@ -487,12 +486,10 @@
               tbody.appendChild(row);
             }
             
-            // Capture today's Imsak and Maghrib for countdown (convert API time from UTC by appending "Z" then adding 5 hours)
+            // Capture today's Imsak and Maghrib for countdown (treated as local time)
             if (dateStr === todayStr) {
-              todayImsak = new Date(`${formattedDate}T${imsakTimeStr}:00Z`);
-              todayImsak.setHours(todayImsak.getHours() + 5);
-              todayMaghrib = new Date(`${formattedDate}T${maghribTimeStr}:00Z`);
-              todayMaghrib.setHours(todayMaghrib.getHours() + 5);
+              todayImsak = new Date(`${formattedDate}T${imsakTimeStr}:00`);
+              todayMaghrib = new Date(`${formattedDate}T${maghribTimeStr}:00`);
             }
           });
           
