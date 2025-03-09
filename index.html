@@ -57,17 +57,20 @@
     .title p {
       font-size: 16px;
     }
-    /* Music Toggle Button */
-    .music-toggle {
-      text-align: center;
-      margin: 15px 0;
+    /* Music Controls */
+    .music-controls {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin: 15px auto;
     }
-    .music-toggle button {
+    .music-controls button {
       background: gold;
       color: black;
       border: none;
-      padding: 10px 20px;
-      font-size: 18px;
+      padding: 5px 10px;
+      font-size: 16px;
       border-radius: 5px;
       cursor: pointer;
     }
@@ -184,7 +187,7 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0,0,0,0.9);
       color: white;
       font-size: 24px;
       align-items: center;
@@ -242,6 +245,10 @@
         font-size: 22px;
         padding: 15px;
       }
+      .music-controls button {
+        font-size: 14px;
+        padding: 5px 8px;
+      }
     }
   </style>
 </head>
@@ -264,9 +271,11 @@
       </div>
     </div>
     
-    <!-- Music Toggle Button -->
-    <div class="music-toggle">
-      <button id="toggle-music-button">Stop Music</button>
+    <!-- Music Controls -->
+    <div class="music-controls">
+      <button id="toggle-music-button">⏯</button>
+      <button id="volume-down-button">-</button>
+      <button id="volume-up-button">+</button>
     </div>
     
     <!-- Countdown & Dua Links Section -->
@@ -344,17 +353,32 @@
       document.getElementById('musicOverlay').style.display = 'none';
     }
     
-    // Music Toggle Functionality
+    // Music Toggle and Volume Control Functionality
     document.addEventListener('DOMContentLoaded', function() {
       const toggleButton = document.getElementById('toggle-music-button');
+      const volumeUpButton = document.getElementById('volume-up-button');
+      const volumeDownButton = document.getElementById('volume-down-button');
       const music = document.getElementById('background-music');
+      
       toggleButton.addEventListener('click', function() {
         if (!music.paused) {
           music.pause();
-          toggleButton.innerText = "Play Music";
+          toggleButton.innerText = "▶";
         } else {
           music.play();
-          toggleButton.innerText = "Stop Music";
+          toggleButton.innerText = "⏸";
+        }
+      });
+      
+      volumeUpButton.addEventListener('click', function() {
+        if (music.volume < 1.0) {
+          music.volume = Math.min(1.0, music.volume + 0.05);
+        }
+      });
+      
+      volumeDownButton.addEventListener('click', function() {
+        if (music.volume > 0) {
+          music.volume = Math.max(0, music.volume - 0.05);
         }
       });
     });
